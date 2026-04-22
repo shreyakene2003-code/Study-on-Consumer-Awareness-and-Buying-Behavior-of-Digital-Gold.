@@ -15,7 +15,7 @@ To study platform preferences and trust levels
 Simulated dataset with 300+ records
 Includes demographics, awareness, investment behavior, and user preferences
 Contains missing values and inconsistencies for real-world analysis practice
-🛠️ Tools & Technologies
+Tools & Technologies
 Microsoft Excel (Data Cleaning, Pivot Tables, Charts)
 Power BI (Dashboard & Data Visualization)
  Key Analysis Performed
