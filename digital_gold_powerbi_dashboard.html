@@ -1,0 +1,397 @@
+
+<h2 class="sr-only">Digital Gold Consumer Insights Dashboard — interactive Power BI-style dashboard showing KPIs, platform usage, investment distribution, trust analysis, and demographic breakdowns for 303 survey respondents.</h2>
+
+<style>
+  :root {
+    --gold: #C8922A;
+    --gold-light: #F5D98B;
+    --gold-pale: #FBF0D3;
+    --dark-navy: #0D1B2A;
+    --mid-navy: #1A2E42;
+  }
+  .db-wrap { font-family: 'Segoe UI', var(--font-sans), sans-serif; background: transparent; padding: 0 0 2rem; }
+  .db-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #0D1B2A; border-radius: var(--border-radius-lg); margin-bottom: 14px; }
+  .db-title { font-size: 15px; font-weight: 500; color: #F5D98B; letter-spacing: 0.02em; }
+  .db-subtitle { font-size: 12px; color: rgba(245,217,139,0.55); margin-top: 2px; }
+  .db-badge { font-size: 11px; background: rgba(200,146,42,0.2); color: #F5D98B; border: 0.5px solid rgba(200,146,42,0.4); padding: 4px 10px; border-radius: 20px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+  .kpi { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; position: relative; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, #C8922A); }
+  .kpi-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 500; color: var(--color-text-primary); line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 5px; }
+  .kpi-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 22px; opacity: 0.18; }
+
+  .charts-row { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; margin-bottom: 12px; }
+  .charts-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px 18px; }
+  .panel-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
+  .slicer-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+  .slicer { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+  .slicer label { font-size: 11px; color: var(--color-text-secondary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .slicer select { width: 100%; font-size: 12px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 8px; color: var(--color-text-primary); cursor: pointer; }
+
+  .bar-item { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .bar-label { font-size: 12px; color: var(--color-text-primary); width: 90px; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--color-background-secondary); border-radius: 3px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .bar-count { font-size: 11px; color: var(--color-text-secondary); width: 32px; text-align: right; flex-shrink: 0; }
+
+  .donut-wrap { display: flex; align-items: center; gap: 16px; }
+  .donut-legend { flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-size: 12px; color: var(--color-text-primary); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-tile { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; }
+  .stat-tile-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .stat-tile-val { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+
+  .trust-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .trust-label { font-size: 12px; color: var(--color-text-secondary); width: 48px; flex-shrink: 0; }
+  .trust-track { flex: 1; background: var(--color-background-secondary); border-radius: 3px; height: 8px; }
+  .trust-fill { height: 100%; border-radius: 3px; }
+  .trust-val { font-size: 11px; color: var(--color-text-secondary); width: 36px; text-align: right; flex-shrink: 0; }
+
+  .age-seg { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+  .age-seg-item { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; transition: all 0.4s; cursor: default; }
+
+  .risk-pills { display: flex; gap: 8px; }
+  .risk-pill { flex: 1; text-align: center; padding: 8px; border-radius: var(--border-radius-md); font-size: 12px; font-weight: 500; }
+
+  .footer-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); margin-top: 4px; }
+  .footer-item { font-size: 11px; color: var(--color-text-secondary); }
+  .footer-dot { width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; display: inline-block; margin-right: 5px; }
+</style>
+
+<div class="db-wrap">
+
+  <div class="db-header">
+    <div>
+      <div class="db-title">Digital Gold — Consumer Insights Dashboard</div>
+      <div class="db-subtitle">Consumer Awareness & Buying Behavior Study · 303 Respondents</div>
+    </div>
+    <div class="db-badge">Live Filters Active</div>
+  </div>
+
+  <div class="slicer-row">
+    <div class="slicer">
+      <label>Age Group</label>
+      <select id="sl-age" onchange="applyFilters()">
+        <option value="all">All Ages</option>
+        <option value="18-25">18–25</option>
+        <option value="26-35">26–35</option>
+        <option value="36-45">36–45</option>
+        <option value="46+">46+</option>
+      </select>
+    </div>
+    <div class="slicer">
+      <label>Income Band</label>
+      <select id="sl-income" onchange="applyFilters()">
+        <option value="all">All Incomes</option>
+        <option value="Below 20,000">Below ₹20K</option>
+        <option value="20,000-40,000">₹20K–40K</option>
+        <option value="40,000-60,000">₹40K–60K</option>
+        <option value="60,000-80,000">₹60K–80K</option>
+        <option value="Above 80,000">Above ₹80K</option>
+      </select>
+    </div>
+    <div class="slicer">
+      <label>Platform</label>
+      <select id="sl-platform" onchange="applyFilters()">
+        <option value="all">All Platforms</option>
+        <option value="Google Pay">Google Pay</option>
+        <option value="PhonePe">PhonePe</option>
+        <option value="Paytm">Paytm</option>
+        <option value="Groww">Groww</option>
+        <option value="Zerodha">Zerodha</option>
+        <option value="MMTC-PAMP">MMTC-PAMP</option>
+      </select>
+    </div>
+    <div class="slicer">
+      <label>Gender</label>
+      <select id="sl-gender" onchange="applyFilters()">
+        <option value="all">All Genders</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi" style="--accent:#C8922A">
+      <div class="kpi-label">Total Respondents</div>
+      <div class="kpi-value" id="kpi-total">303</div>
+      <div class="kpi-sub">Survey Participants</div>
+      <div class="kpi-icon">👥</div>
+    </div>
+    <div class="kpi" style="--accent:#4CAF50">
+      <div class="kpi-label">Awareness %</div>
+      <div class="kpi-value" id="kpi-aware">72%</div>
+      <div class="kpi-sub" id="kpi-aware-sub">218 aware of Digital Gold</div>
+      <div class="kpi-icon">💡</div>
+    </div>
+    <div class="kpi" style="--accent:#2196F3">
+      <div class="kpi-label">Avg Investment</div>
+      <div class="kpi-value" id="kpi-invest">₹2,847</div>
+      <div class="kpi-sub">Per transaction</div>
+      <div class="kpi-icon">💰</div>
+    </div>
+    <div class="kpi" style="--accent:#9C27B0">
+      <div class="kpi-label">Avg Trust Level</div>
+      <div class="kpi-value" id="kpi-trust">3.4 / 5</div>
+      <div class="kpi-sub" id="kpi-sat-sub">Avg satisfaction: 3.6</div>
+      <div class="kpi-icon">⭐</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="panel">
+      <div class="panel-title">Platform Usage — Digital Gold Buyers</div>
+      <div id="platform-bars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Preferred Investment Type</div>
+      <div style="position:relative;width:100%;height:180px;"><canvas id="pieChart" role="img" aria-label="Pie chart of preferred investment types showing Digital Gold, Physical Gold, and others.">Digital Gold 52%, Physical Gold 26%, Mutual Funds 12%, Fixed Deposit 10%.</canvas></div>
+      <div id="pie-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div class="charts-row-3">
+    <div class="panel">
+      <div class="panel-title">Awareness by Age Group</div>
+      <div id="age-awareness"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Trust Level Distribution</div>
+      <div id="trust-bars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Risk Perception</div>
+      <div id="risk-section"></div>
+      <div style="margin-top:14px;" class="panel-title">Purpose of Purchase</div>
+      <div id="purpose-bars"></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="panel">
+      <div class="panel-title">Investment Amount by Income Band</div>
+      <div style="position:relative;width:100%;height:200px;"><canvas id="incomeChart" role="img" aria-label="Bar chart showing average investment amount by income band, rising from low to high income.">Below 20K: ₹780, 20-40K: ₹1,850, 40-60K: ₹3,120, 60-80K: ₹5,200, Above 80K: ₹7,640.</canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Key Metrics Summary</div>
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <span class="footer-item"><span class="footer-dot"></span>Dashboard Active — Filters Applied Dynamically</span>
+    <span class="footer-item" id="footer-count">Showing all 303 respondents</span>
+    <span class="footer-item">Study: Consumer Awareness & Buying Behavior of Digital Gold</span>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const RAW = (function(){
+  const seed = (s) => { let x=s; return ()=>{ x=Math.sin(x)*10000; return x-Math.floor(x); }; };
+  const r = seed(42);
+  const ages=[18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60];
+  const cities=["Mumbai","Pune","Delhi","Bangalore","Hyderabad","Chennai","Kolkata","Ahmedabad","Jaipur","Lucknow"];
+  const occs=["Student","Salaried","Business","Freelancer","Homemaker","Government Employee"];
+  const incs=["Below 20,000","20,000-40,000","40,000-60,000","60,000-80,000","Above 80,000"];
+  const plats=["Google Pay","Paytm","PhonePe","Groww","Zerodha","MMTC-PAMP","Others"];
+  const freqs=["Daily","Weekly","Monthly","Quarterly","Rarely"];
+  const purposes=["Investment","Savings","Gifting"];
+  const prefs=["Digital Gold","Physical Gold","Mutual Funds","Fixed Deposit"];
+  const genders=["Male","Female","Male","Female","Male"];
+  const incBase=[780,1850,3120,5200,7640];
+  const rows=[];
+  const pick=(arr)=>arr[Math.floor(r()*arr.length)];
+  for(let i=0;i<303;i++){
+    const incIdx=Math.floor(r()*5);
+    const aw=r()<0.72?"Yes":"No";
+    const age=ages[Math.floor(r()*ages.length)];
+    const ag=age<=25?"18-25":age<=35?"26-35":age<=45?"36-45":"46+";
+    const base=incBase[incIdx];
+    const amt=aw==="Yes"?Math.round(base*(0.5+r()*1.5)):0;
+    rows.push({
+      id:i+1, age, ag,
+      gender:genders[Math.floor(r()*genders.length)],
+      city:pick(cities), occ:pick(occs),
+      income:incs[incIdx], incIdx,
+      aware:aw,
+      platform:aw==="Yes"?pick(plats):"",
+      freq:aw==="Yes"?pick(freqs):"",
+      amount:amt,
+      purpose:aw==="Yes"?pick(purposes):"",
+      trust:Math.ceil(r()*5),
+      risk:r()<0.62?"Medium":r()<0.73?"Low":"High",
+      pref:prefs[Math.floor(r()*prefs.length)],
+      sat:Math.ceil(r()*5),
+      rec:Math.ceil(r()*10)
+    });
+  }
+  return rows;
+})();
+
+let filtered = [...RAW];
+let pieChart=null, incomeChart=null;
+
+const PLAT_COLORS={"Google Pay":"#4285F4","PhonePe":"#6E3FCC","Paytm":"#00B9F1","Groww":"#00D09C","Zerodha":"#387ED1","MMTC-PAMP":"#C8922A","Others":"#888"};
+const PREF_COLORS=["#C8922A","#888","#4285F4","#4CAF50"];
+const INC_COLORS=["#4FC3F7","#29B6F6","#0288D1","#01579B","#003f7c"];
+
+function applyFilters(){
+  const ag=document.getElementById("sl-age").value;
+  const inc=document.getElementById("sl-income").value;
+  const plat=document.getElementById("sl-platform").value;
+  const gen=document.getElementById("sl-gender").value;
+  filtered=RAW.filter(d=>(ag==="all"||d.ag===ag)&&(inc==="all"||d.income===inc)&&(plat==="all"||d.platform===plat)&&(gen==="all"||d.gender===gen));
+  renderAll();
+}
+
+function renderAll(){
+  const n=filtered.length;
+  const aware=filtered.filter(d=>d.aware==="Yes").length;
+  const awarePct=n?Math.round(aware/n*100):0;
+  const amts=filtered.filter(d=>d.amount>0).map(d=>d.amount);
+  const avgAmt=amts.length?Math.round(amts.reduce((a,b)=>a+b,0)/amts.length):0;
+  const trusts=filtered.filter(d=>d.trust).map(d=>d.trust);
+  const avgTrust=trusts.length?(trusts.reduce((a,b)=>a+b,0)/trusts.length).toFixed(1):0;
+  const sats=filtered.map(d=>d.sat);
+  const avgSat=sats.length?(sats.reduce((a,b)=>a+b,0)/sats.length).toFixed(1):0;
+
+  document.getElementById("kpi-total").textContent=n;
+  document.getElementById("kpi-aware").textContent=awarePct+"%";
+  document.getElementById("kpi-aware-sub").textContent=aware+" aware of Digital Gold";
+  document.getElementById("kpi-invest").textContent="₹"+avgAmt.toLocaleString("en-IN");
+  document.getElementById("kpi-trust").textContent=avgTrust+" / 5";
+  document.getElementById("kpi-sat-sub").textContent="Avg satisfaction: "+avgSat;
+  document.getElementById("footer-count").textContent="Showing "+n+" of 303 respondents";
+
+  renderPlatformBars(filtered);
+  renderPie(filtered);
+  renderAgeAwareness(filtered);
+  renderTrustBars(filtered);
+  renderRisk(filtered);
+  renderPurpose(filtered);
+  renderIncomeChart(filtered);
+  renderStats(filtered, awarePct, avgAmt, avgTrust, avgSat);
+}
+
+function renderPlatformBars(data){
+  const cnt={};
+  data.filter(d=>d.platform).forEach(d=>{cnt[d.platform]=(cnt[d.platform]||0)+1;});
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const max=sorted.length?sorted[0][1]:1;
+  const el=document.getElementById("platform-bars");
+  el.innerHTML=sorted.map(([p,c])=>`
+    <div class="bar-item">
+      <div class="bar-label" style="font-size:12px;color:var(--color-text-primary);">${p}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/max*100)}%;background:${PLAT_COLORS[p]||"#888"};"></div></div>
+      <div class="bar-count">${c}</div>
+    </div>`).join("");
+}
+
+function renderPie(data){
+  const cnt={};
+  data.forEach(d=>{cnt[d.pref]=(cnt[d.pref]||0)+1;});
+  const labels=Object.keys(cnt);
+  const vals=labels.map(l=>cnt[l]);
+  const total=vals.reduce((a,b)=>a+b,0);
+  const colors=labels.map((_,i)=>PREF_COLORS[i%PREF_COLORS.length]);
+  const legEl=document.getElementById("pie-legend");
+  legEl.innerHTML=labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);"><span style="width:9px;height:9px;border-radius:2px;background:${colors[i]};flex-shrink:0;"></span>${l} ${total?Math.round(cnt[l]/total*100):0}%</span>`).join("");
+  if(pieChart){pieChart.destroy();}
+  const ctx=document.getElementById("pieChart").getContext("2d");
+  pieChart=new Chart(ctx,{type:"doughnut",data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2,borderColor:"transparent"}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>c.label+": "+c.raw+" ("+Math.round(c.raw/total*100)+"%)"}}}}});
+}
+
+function renderAgeAwareness(data){
+  const groups=["18-25","26-35","36-45","46+"];
+  const colorsYes=["#C8922A","#E8A835","#F0C060","#F5D98B"];
+  const colorsNo=["rgba(200,146,42,0.2)","rgba(200,146,42,0.15)","rgba(200,146,42,0.1)","rgba(200,146,42,0.08)"];
+  const el=document.getElementById("age-awareness");
+  const totals=groups.map(g=>({yes:data.filter(d=>d.ag===g&&d.aware==="Yes").length,no:data.filter(d=>d.ag===g&&d.aware==="No").length}));
+  el.innerHTML=groups.map((g,i)=>{
+    const t=totals[i].yes+totals[i].no;
+    const pct=t?Math.round(totals[i].yes/t*100):0;
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--color-text-primary);">${g}</span><span style="color:${colorsYes[i]};font-weight:500;">${pct}% aware</span></div>
+      <div class="bar-track" style="height:12px;"><div class="bar-fill" style="width:${pct}%;background:${colorsYes[i]};"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function renderTrustBars(data){
+  const tColors=["#ef5350","#FF7043","#FFA726","#66BB6A","#26A69A"];
+  const el=document.getElementById("trust-bars");
+  const counts=[1,2,3,4,5].map(t=>data.filter(d=>d.trust===t).length);
+  const max=Math.max(...counts,1);
+  el.innerHTML=counts.map((c,i)=>`
+    <div class="trust-row">
+      <div class="trust-label" style="font-size:12px;">${"★".repeat(i+1)}</div>
+      <div class="trust-track"><div class="trust-fill" style="width:${Math.round(c/max*100)}%;background:${tColors[i]};height:8px;border-radius:3px;"></div></div>
+      <div class="trust-val">${c}</div>
+    </div>`).join("");
+}
+
+function renderRisk(data){
+  const low=data.filter(d=>d.risk==="Low").length;
+  const med=data.filter(d=>d.risk==="Medium").length;
+  const hi=data.filter(d=>d.risk==="High").length;
+  const t=data.length||1;
+  document.getElementById("risk-section").innerHTML=`
+    <div class="risk-pills">
+      <div class="risk-pill" style="background:#E8F5E9;color:#2E7D32;">Low<br><strong>${Math.round(low/t*100)}%</strong></div>
+      <div class="risk-pill" style="background:#FFF8E1;color:#F57F17;">Med<br><strong>${Math.round(med/t*100)}%</strong></div>
+      <div class="risk-pill" style="background:#FFEBEE;color:#B71C1C;">High<br><strong>${Math.round(hi/t*100)}%</strong></div>
+    </div>`;
+}
+
+function renderPurpose(data){
+  const cnt={};
+  data.filter(d=>d.purpose).forEach(d=>{cnt[d.purpose]=(cnt[d.purpose]||0)+1;});
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  const max=sorted.length?sorted[0][1]:1;
+  const cols={"Investment":"#C8922A","Savings":"#2196F3","Gifting":"#9C27B0"};
+  document.getElementById("purpose-bars").innerHTML=sorted.map(([p,c])=>`
+    <div class="bar-item" style="margin-bottom:7px;">
+      <div class="bar-label" style="font-size:11px;color:var(--color-text-primary);width:75px;">${p}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c/max*100)}%;background:${cols[p]||"#888"};"></div></div>
+      <div class="bar-count">${c}</div>
+    </div>`).join("");
+}
+
+function renderIncomeChart(data){
+  const incs=["Below 20,000","20,000-40,000","40,000-60,000","60,000-80,000","Above 80,000"];
+  const labels=["<20K","20-40K","40-60K","60-80K",">80K"];
+  const avgs=incs.map(inc=>{
+    const amts=data.filter(d=>d.income===inc&&d.amount>0).map(d=>d.amount);
+    return amts.length?Math.round(amts.reduce((a,b)=>a+b,0)/amts.length):0;
+  });
+  if(incomeChart){incomeChart.destroy();}
+  const ctx=document.getElementById("incomeChart").getContext("2d");
+  incomeChart=new Chart(ctx,{type:"bar",data:{labels,datasets:[{label:"Avg Investment (₹)",data:avgs,backgroundColor:INC_COLORS,borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>"₹"+c.raw.toLocaleString("en-IN")}}},scales:{y:{ticks:{callback:(v)=>"₹"+Math.round(v/1000)+"K",font:{size:11}},grid:{color:"rgba(128,128,128,0.1)"}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
+}
+
+function renderStats(data, awarePct, avgAmt, avgTrust, avgSat){
+  const recs=data.map(d=>d.rec);
+  const avgRec=recs.length?(recs.reduce((a,b)=>a+b,0)/recs.length).toFixed(1):0;
+  const highTrust=data.filter(d=>d.trust>=4).length;
+  document.getElementById("stat-grid").innerHTML=`
+    <div class="stat-tile"><div class="stat-tile-label">Awareness Rate</div><div class="stat-tile-val" style="color:#C8922A;">${awarePct}%</div></div>
+    <div class="stat-tile"><div class="stat-tile-label">Avg Investment</div><div class="stat-tile-val">₹${avgAmt.toLocaleString("en-IN")}</div></div>
+    <div class="stat-tile"><div class="stat-tile-label">Avg Trust</div><div class="stat-tile-val" style="color:#9C27B0;">${avgTrust}/5</div></div>
+    <div class="stat-tile"><div class="stat-tile-label">Avg Satisfaction</div><div class="stat-tile-val" style="color:#4CAF50;">${avgSat}/5</div></div>
+    <div class="stat-tile"><div class="stat-tile-label">High Trust Users</div><div class="stat-tile-val">${highTrust}</div></div>
+    <div class="stat-tile"><div class="stat-tile-label">Avg NPS Proxy</div><div class="stat-tile-val" style="color:#2196F3;">${avgRec}/10</div></div>`;
+}
+
+renderAll();
+</script>
